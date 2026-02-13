@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新年起床大作战</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            /* 这里依然保留背景设置，如有bg.jpg会自动显示，没有就显示粉色 */
+            background-color: #fcefe8; 
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden; /* 禁止滚动 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 页面容器 */
+        .container {
+            position: relative;
+            z-index: 10; /* 保证文字在视频上层 */
+            width: 100%;
+        }
+
+        h1 {
+            color: #d32f2f;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+            /* 给文字加个背景框，方便看清，也方便碰撞检测 */
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+        }
+
+        /* 按钮容器 */
+        .btn-box {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s; /* 只保留缩放动画 */
+            font-weight: bold;
+        }
+
+        #yesBtn {
+            background-color: #e53935;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        #noBtn {
+            background-color: #9e9e9e;
+            color: white;
+            position: relative; 
+        }
+
+        /* -----------------------
+           1. 弹珠球 (head.jpg) 样式 
+           ----------------------- */
+        #bouncing-ball {
+            position: fixed;
+            border-radius: 50%;
+            object-fit: cover;
+            z-index: 5; /* 在背景之上，但在文字之下(也可之上，看喜好) */
+            
+            /* 初始状态：居中 */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            
+            /* 动画：从全屏缩小到小球 */
+            width: 150vmax; /* 足够大填满屏幕 */
+            height: 150vmax;
+            animation: shrinkDown 1.5s ease-in-out forwards;
+        }
+
+        @keyframes shrinkDown {
+            0% {
+                width: 150vmax;
+                height: 150vmax;
+                opacity: 1;
+            }
+            100% {
+                width: 80px; /* 最终大小 */
+                height: 80px;
+                opacity: 1;
+            }
+        }
+
+        /* -----------------------
+           2. 右下角视频 (lying.mp4)
+           ----------------------- */
+        #corner-video {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 150px; /* 视频大小 */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 20; /* 放在最上层 */
+            border: 3px solid white;
+        }
+
+        /* -----------------------
+           3. 第二页样式
+           ----------------------- */
+        #page2 {
+            display: none; /* 初始隐藏 */
+            animation: fadeIn 1s;
+        }
+
+        /* feu.gif 在第二页居中 */
+        .center-gif {
+            display: block;
+            margin: 20px auto; /* 上下20px间距，左右自动居中 */
+            max-width: 80%;
+            border-radius: 15px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <img src="head.jpg" id="bouncing-ball" alt="Ball">
+
+    <video id="corner-video" autoplay loop muted playsinline>
+        <source src="lying.mp4" type="video/mp4">
+    </video>
+
+    <div class="container" id="page1">
+        <h1 id="question-text">你你你 你要起床吗</h1>
+        
+        <div class="btn-box">
+            <button id="yesBtn">这就起来</button>
+            <button id="noBtn">再躺一会</button>
+        </div>
+    </div>
+
+    <div class="container" id="page2">
+        <h1>那就祝你新年快乐吧</h1>
+        <img src="feu.gif" class="center-gif" alt="庆祝">
+    </div>
+
+    <script>
+        const ball = document.getElementById('bouncing-ball');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const questionText = document.getElementById('question-text');
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+        const cornerVideo = document.getElementById('corner-video');
+
+        // --- 逻辑1：No按钮跑路 & Yes按钮变大 ---
+        let currentScale = 1;
+        
+        // 只有在 Page 1 显示的时候 No 按钮才跑
+        noBtn.addEventListener('mouseover', function() {
+            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 50);
+            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 50);
+            
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = x + 'px';
+            noBtn.style.top = y + 'px';
+
+            currentScale += 0.2;
+            yesBtn.style.transform = `scale(${currentScale})`;
+        });
+
+        // 防止点击 No
+        noBtn.addEventListener('click', (e) => e.preventDefault());
+
+        // --- 逻辑2：点击 Yes 切换页面 ---
+        yesBtn.addEventListener('click', function() {
+            page1.style.display = 'none'; // 隐藏问题
+            ball.style.display = 'none';  // 隐藏弹珠
+            // cornerVideo.style.display = 'none'; // 如果你想第二页也隐藏右下角视频，就把这行注释打开
+            
+            page2.style.display = 'block'; // 显示祝福
+        });
+
+
+        // --- 逻辑3：弹珠物理碰撞系统 (高能预警) ---
+        
+        let ballX = window.innerWidth / 2;
+        let ballY = window.innerHeight / 2;
+        let vx = 0; // X轴速度
+        let vy = 0; // Y轴速度
+        let isMoving = false;
+        const speed = 8; // 弹珠速度，越大越快
+
+        // 监听鼠标移动，一旦移动就开始各种乱撞
+        document.addEventListener('mousemove', function() {
+            if (!isMoving) {
+                isMoving = true;
+                // 给一个随机的初始方向
+                vx = (Math.random() - 0.5) * speed * 2;
+                vy = (Math.random() - 0.5) * speed * 2;
+                animateBall();
+            }
+        });
+
+        // 获取元素的位置信息 (用于碰撞检测)
+        function getRect(elem) {
+            return elem.getBoundingClientRect();
+        }
+
+        // 检测两个矩形是否碰撞
+        function isColliding(r1, r2) {
+            return !(r2.left > r1.right || 
+                     r2.right < r1.left || 
+                     r2.top > r1.bottom || 
+                     r2.bottom < r1.top);
+        }
+
+        function animateBall() {
+            if (page1.style.display === 'none') return; // 如果到了第二页就停止计算
+
+            // 1. 更新位置
+            // 注意：这里需要考虑动画缩放后的实际位置，为了简化，我们在动画结束后(1.5s)开始计算会更准
+            // 但为了效果即时，我们假设球现在已经是 80x80 了
+            // 为了让球从屏幕中心散开，我们只在 isMoving 后更新 JS 坐标
+            
+            // 实际上 CSS 动画控制了初始大小，JS 控制位置
+            // 我们需要先把控制权从 CSS 拿过来，所以在动画结束前，这个逻辑可能会有点怪，
+            // 建议：等 1.5 秒动画播完，再允许弹球
+        }
+
+        // 修正：等待开场动画(1.5s)结束后，才允许弹珠运动
+        setTimeout(() => {
+            // 初始化球的位置为屏幕中心
+            ballX = window.innerWidth / 2 - 40; // 减去半径
+            ballY = window.innerHeight / 2 - 40;
+            
+            // 移除 CSS 的居中定位，改用 JS 控制
+            ball.style.transform = 'none'; 
+            ball.style.left = '0';
+            ball.style.top = '0';
+            // 强制设为 JS 坐标
+            ball.style.transform = `translate(${ballX}px, ${ballY}px)`;
+
+            // 开启弹球循环
+            requestAnimationFrame(updateLoop);
+
+        }, 1500);
+
+        function updateLoop() {
+            if (!isMoving || page1.style.display === 'none') {
+                requestAnimationFrame(updateLoop);
+                return;
+            }
+
+            ballX += vx;
+            ballY += vy;
+
+            // 1. 碰到屏幕边缘反弹
+            if (ballX <= 0 || ballX + 80 >= window.innerWidth) vx = -vx;
+            if (ballY <= 0 || ballY + 80 >= window.innerHeight) vy = -vy;
+
+            // 2. 定义球的碰撞箱
+            const ballRect = {
+                left: ballX,
+                right: ballX + 80,
+                top: ballY,
+                bottom: ballY + 80
+            };
+
+            // 3. 检测碰撞目标：标题、Yes按钮、No按钮
+            // 我们把这些元素放进一个数组里遍历
+            const targets = [questionText, yesBtn, noBtn];
+
+            targets.forEach(target => {
+                const targetRect = getRect(target);
+                if (isColliding(ballRect, targetRect)) {
+                    // 简单的反弹逻辑：碰到就反向
+                    // 为了防止卡在里面，我们简单地把速度反转
+                    vx = -vx;
+                    vy = -vy;
+                    
+                    // 稍微增加一点随机性，防止死循环路径
+                    vx += (Math.random() - 0.5); 
+                    vy += (Math.random() - 0.5);
+                }
+            });
+
+            // 应用新位置
+            ball.style.transform = `translate(${ballX}px, ${ballY}px)`;
+            
+            requestAnimationFrame(updateLoop);
+        }
+
+    </script>
+</body>
+</html>
